@@ -1,3 +1,5 @@
+# adb封包
+
 import subprocess
 import os
 
@@ -61,6 +63,7 @@ class Adb_func():
     def devices():
         return "adb devices"
 
+    # 查看所有包
     def showAllPkg(mode=None):
         if mode == "-s":
             return "adb shell pm list packages -s"
@@ -85,7 +88,7 @@ class Adb_func():
         # iqoo z1 1079 2407
         return "adb shell input tap {} {}".format(x, y)
 
-
+    # 安装/卸载apk
     def install(apk:str, mode=None):
         if mode == '-r' and os.path.exists(apk):
             return "adb install -r " + apk
@@ -101,9 +104,10 @@ class Adb_func():
         else:
             return ""
 
-    # 软件操作
+    # 显示appActivity
     def showActivity():
         return "adb shell 'dumpsys window | grep mCurrentFocus'"
+    # 显示app启动页面Activity
     def actionAct(activity:str):
         return "adb shell am start -n " + activity
     def clearData(pkg=None):
@@ -111,8 +115,13 @@ class Adb_func():
             return "adb shell pm clear " + pkg
         return "adb shell pm clear " + subprocess.getoutput(Adb_func.showAllPkg("--this")).split(" ")[-1].split("/")[0].replace("\n", "")
 
+    # 可视化auto api
+    def getEvent():
+        return 'adb shell getevent -p | grep -e "0035" -e "0036"'
+    def getEventEev():
+        return 'adb shell getevent | grep -e "0035" -e "0036"'
     
-
+# 查看当前Activity
 def sh(command, print_msg=True):
     p = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -155,4 +164,3 @@ def get_launcher_activity(package_name):
     return ''
 
 # print(get_launcher_activity('com.akatosh.reimu'))
-
