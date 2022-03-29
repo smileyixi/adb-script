@@ -1,0 +1,3 @@
+SMILESL(º﹃º ) ~ adb shell getevent | grep -e "0035" -e "0036"
+/dev/input/event5: 0003 0035 000001cf
+/dev/input/event5: 0003 0036 000001ca
