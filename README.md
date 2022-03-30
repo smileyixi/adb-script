@@ -86,7 +86,7 @@
 ## 如何使用
 
 1. 脚本终端输入`getevent`，即可开启录制功能，在手机上执行【点击/滑动】事件即可产生代码<u>【注意：Windows系统需要手动在cmd输入下面的代码】</u>`adb shell getevent -t | grep -e "0035" -e "0036"`
-2. ![getevent](/Users/smilesl/Desktop/adb-script/potos/getevent.png)
+2. ![getevent](photos/getevent.png)
 
 
 
