@@ -31,7 +31,8 @@ class Auto_func():
         auto.PAUSE = 0.5
         auto.FAILSAFE = False
 
-        os.system("open -a 'Terminal'") # 打开Ternimal（只适用于MacOS，其他系统自行更改）
+        os.system("open -n /System/Applications/Utilities/Terminal.app") # 打开Ternimal（只适用于MacOS，其他系统自行更改）
+        os.system("clear")
         time.sleep(2)
         
         auto.typewrite(Adb_func.getEventEev(), '0.01') # 调用adb function记录事件 - 手动保存event事件
