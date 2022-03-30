@@ -5,6 +5,7 @@ import platform
 import re
 import adb
 from adb import Adb_func
+from auto import Auto_func
 
 
 class FileInit():
@@ -17,6 +18,8 @@ class FileInit():
         #self.__init()
         self.setInfo(file_path, author)
         self.createFile(reWrite=reWrite)
+        self.__is_init_event = False    # 是否初始化了event
+        self.auto_func = Auto_func()    # 实例化Auto_func
 
     # 启动自检函数 [文件目录是否存在以及完整性等]
     # def __init(self):
@@ -206,6 +209,28 @@ class FileInit():
                 else:
                     os.system(Adb_func.clearData())
             
+            # 录制手势 - 无需root！
+            elif cmd == "getevent":  # 获取event数据
+                if self.os == "Windows" or self.os == "Linux":
+                    print("[-] 不支持此操作，请查看[README.md]获取帮助")
+                else:
+                    self.auto_func.event_log()
+            elif cmd == "sendevent": # 测试使用payload
+                if not self.__is_init_event:
+                    print("[*] 正在初始化event事件")
+                    self.event_payload_list = self.auto_func.init_event(0.2)
+                self.auto_func.send_event()
+
+
+            elif cmd == "saveevent": # 保存动作数据到脚本
+                if not self.__is_init_event:
+                    print("[*] 正在初始化event事件")
+                    self.event_payload_list = self.auto_func.init_event(0.2)
+
+                for payload in self.event_payload_list:
+                    self.addCmdLine(payload)
+                self.__is_init_event = True
+
             # adb shell
             elif cmd[0] == "adb":
                 adb_cmd = ""
@@ -236,7 +261,8 @@ class FileInit():
 
     # 设置信息，内部func
     def setInfo(self, file_path, author):
-        self.file_path = file_path
+        if "/" in file_path or "\\" in file_path: self.file_path = file_path
+        else: self.file_path = "script/" + file_path
         self.file_name = os.path.basename(file_path)
         self.author_name = author
         self.createtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
