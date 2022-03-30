@@ -33,6 +33,10 @@ class Adb_func():
         \033[1;32;40m默认可使用adb命令进行调试\033[0m
         \033[1;32;40m=========================\033[0m
         exit -  退出
+        getevent  - 打开终端监听事件数据
+        sendevent - 测试并执行获取的事件
+        saveevent - 保存事件代码到脚本文件
+
         click [num1] [num2] - 点击屏幕(x,y)点
             [num] 点击点(x,y)的坐标数值
         keyevent  -  查看所有系统按键
@@ -84,9 +88,9 @@ class Adb_func():
                 return "adb shell input keyevent "+key
         return 0
     def click(x:int, y:int):
-        # adb shell getevent -p | grep -e "0035" -e "0036" 屏幕最大分辨率
-        # iqoo z1 1079 2407
         return "adb shell input tap {} {}".format(x, y)
+    def swipe(x1:int, y1:int, x2:int, y2:int):
+        return "adb shell input swipe {} {} {} {}".format(x1, y1, x2, y2)
 
     # 安装/卸载apk
     def install(apk:str, mode=None):
@@ -119,7 +123,7 @@ class Adb_func():
     def getEvent():
         return 'adb shell getevent -p | grep -e "0035" -e "0036"'
     def getEventEev():
-        return 'adb shell getevent | grep -e "0035" -e "0036"'
+        return 'adb shell getevent -t | grep -e "0035" -e "0036"'
     
 # 查看当前Activity
 def sh(command, print_msg=True):
@@ -164,3 +168,4 @@ def get_launcher_activity(package_name):
     return ''
 
 # print(get_launcher_activity('com.akatosh.reimu'))
+
