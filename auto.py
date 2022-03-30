@@ -32,6 +32,7 @@ class Auto_func():
         auto.FAILSAFE = False
 
         os.system("open -n /System/Applications/Utilities/Terminal.app") # 打开Ternimal（只适用于MacOS，其他系统自行更改）
+        time.sleep(2)
         os.system("clear")
         time.sleep(2)
         
