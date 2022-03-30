@@ -1,3 +1,4 @@
+ ![getevent](photos/adb-scirpt_cmd.png)
 
 # 说明
 
