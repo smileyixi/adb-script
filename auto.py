@@ -27,7 +27,7 @@ class Auto_func():
 
 
     # autogui保存事件log
-    def event_log() -> None:
+    def event_log(self):
         auto.PAUSE = 0.5
         auto.FAILSAFE = False
 
