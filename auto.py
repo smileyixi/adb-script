@@ -85,8 +85,12 @@ class Auto_func():
 
         # 解析数据（获取时间戳）
         for event in event_list:
-            param_top = re.findall("\[(.*?)\]", event)
-            timestamp_list.append(param_top[0].replace(" ", ""))
+            try:
+                param_top = re.findall("\[(.*?)\]", event)
+                timestamp_list.append(param_top[0].replace(" ", ""))
+            except:
+                print("[!] Data in wrong format! | event_temp.txt") 
+                return 0
 
         # 解析数据（hex->dec）
         for event in event_list:
