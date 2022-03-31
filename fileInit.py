@@ -183,8 +183,8 @@ class FileInit():
             elif cmd[0] == "wait":
                 if not self.paraTest(cmd, 2):
                     continue
-                self.addCmdLine("time.sleep("+cmd[1]+")")
-                print("[+] wait 5")
+                self.f.write("time.sleep("+cmd[1]+")"+"\n")
+                print("[+] wait "+cmd[1])
 
             # apk activity handle
             elif cmd[0] == "install":
@@ -252,7 +252,7 @@ class FileInit():
             elif cmd == "sendevent": # 测试使用payload
                 if not self.__is_init_event:
                     print("[*] 正在初始化event事件")
-                    self.event_payload_list = self.auto_func.init_event(0.2)
+                    self.event_payload_list, self.event_timestamp_list = self.auto_func.init_event(0.2)
                     self.__is_init_event == True
                 self.auto_func.send_event()
 
@@ -260,11 +260,18 @@ class FileInit():
             elif cmd == "saveevent": # 保存动作数据到脚本
                 if not self.__is_init_event:
                     print("[*] 正在初始化event事件")
-                    self.event_payload_list = self.auto_func.init_event(0.2)
+                    self.event_payload_list, self.event_timestamp_list = self.auto_func.init_event(0.2)
+                    self.__is_init_event = True
 
-                for payload in self.event_payload_list:
-                    self.addCmdLine(payload)
-                self.__is_init_event = True
+                # 添加payload - 间隔时间片 到脚本
+                for payload_index in range(len(self.event_payload_list)):
+                    if payload_index == len(self.event_payload_list) - 1:
+                        break
+                    self.f.write("print('[*] 正在执行payload | ' + '"+self.event_payload_list[payload_index]+"')" + "\n")  # console msg
+                    self.addCmdLine(self.event_payload_list[payload_index])    # payload code
+                    self.f.write("time.sleep("+str(self.event_timestamp_list[payload_index-1])+")"+"\n")   # timestamp
+                    
+                
                 print("[+] add event | num {}".format(self.auto_func.event_num))
 
             # adb shell
