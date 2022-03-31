@@ -4,8 +4,11 @@ import subprocess
 import os
 
 class Adb_func():
+
+    def __init__(self, adb_path="adb") -> None:
+        self.adb_path = adb_path    # adb root_path
     
-    def showkeys():
+    def showkeys(self):
         key_info = '''
         \033[1;32;40m===================================\033[0m
         \033[1;32;40m使用 key [num] 形式添加执行按键动作\033[0m
@@ -27,7 +30,7 @@ class Adb_func():
         print(key_info)
 
 
-    def info():
+    def info(self):
         info = '''
         \033[1;32;40m=========================\033[0m
         \033[1;32;40m默认可使用adb命令进行调试\033[0m
@@ -42,6 +45,8 @@ class Adb_func():
         keyevent  -  查看所有系统按键
         key [num] -  点击按键
             [num] 按键代码，输入keyevent命令查看代码
+        wait [num]-  等待num秒，单位秒
+        swipe     - 向上滑动一段距离【可用于解锁手机】
         state     -  查看adb连接手机状态
         
         install [-r] [file.apk] -  安装软件
@@ -64,66 +69,66 @@ class Adb_func():
         '''
         print(info)
 
-    def devices():
-        return "adb devices"
+    def devices(self):
+        return self.adb_path + " devices"
 
     # 查看所有包
-    def showAllPkg(mode=None):
+    def showAllPkg(self, mode=None):
         if mode == "-s":
-            return "adb shell pm list packages -s"
+            return self.adb_path + " shell pm list packages -s"
         elif mode == "-3":
-            return "adb shell pm list packages -3"
+            return self.adb_path + " shell pm list packages -3"
         elif mode == None:
-            return "adb shell pm list packages"
+            return self.adb_path + " shell pm list packages"
         elif mode == "--this":
-            return "adb shell 'dumpsys window | grep mCurrentFocus'"
+            return self.adb_path + " shell 'dumpsys window | grep mCurrentFocus'"
         else:
             return ""
 
     # 按键控制
-    def keyevent(key:str):
+    def keyevent(self, key:str):
         keyevent = [26, 82, 3, 4, 24, 25, 164, 85, 86, 87, 88, 126, 127]
         for i in keyevent:
             if str(i) == key:
-                return "adb shell input keyevent "+key
+                return self.adb_path + " shell input keyevent "+key
         return 0
-    def click(x:int, y:int):
-        return "adb shell input tap {} {}".format(x, y)
-    def swipe(x1:int, y1:int, x2:int, y2:int):
-        return "adb shell input swipe {} {} {} {}".format(x1, y1, x2, y2)
+    def click(self, x:int, y:int):
+        return self.adb_path + " shell input tap {} {}".format(x, y)
+    def swipe(self, x1:int, y1:int, x2:int, y2:int):
+        return self.adb_path + " shell input swipe {} {} {} {}".format(x1, y1, x2, y2)
 
     # 安装/卸载apk
-    def install(apk:str, mode=None):
+    def install(self, apk:str, mode=None):
         if mode == '-r' and os.path.exists(apk):
-            return "adb install -r " + apk
+            return self.adb_path + " install -r " + apk
         elif os.path.exists(apk):
-            return "adb install " + apk
+            return self.adb_path + " install " + apk
         else:
             return ""
-    def uninstall(apk:str, mode=None):
+    def uninstall(self, apk:str, mode=None):
         if mode == '-k':
-            return "adb uninstall -k " + apk
+            return self.adb_path + " uninstall -k " + apk
         elif "com" in apk:
-            return "adb uninstall " + apk
+            return self.adb_path + " uninstall " + apk
         else:
             return ""
 
     # 显示appActivity
-    def showActivity():
-        return "adb shell 'dumpsys window | grep mCurrentFocus'"
+    def showActivity(self):
+        return self.adb_path + " shell 'dumpsys window | grep mCurrentFocus'"
     # 显示app启动页面Activity
-    def actionAct(activity:str):
-        return "adb shell am start -n " + activity
-    def clearData(pkg=None):
+    def actionAct(self, activity:str):
+        return self.adb_path + " shell am start -n " + activity
+    def clearData(self, pkg=None):
         if pkg != None:
-            return "adb shell pm clear " + pkg
-        return "adb shell pm clear " + subprocess.getoutput(Adb_func.showAllPkg("--this")).split(" ")[-1].split("/")[0].replace("\n", "")
+            return self.adb_path + " shell pm clear " + pkg
+        return self.adb_path + " shell pm clear " + subprocess.getoutput(Adb_func.showAllPkg("--this")).split(" ")[-1].split("/")[0].replace("\n", "")
 
     # 可视化auto api
-    def getEvent():
-        return 'adb shell getevent -p | grep -e "0035" -e "0036"'
-    def getEventEev():
-        return 'adb shell getevent -t | grep -e "0035" -e "0036"'
+    def getEvent(self):
+        return self.adb_path +' shell getevent -p | grep -e "0035" -e "0036"'
+    def getEventEev(self):
+        return self.adb_path +' shell getevent -t | grep -e "0035" -e "0036"'
     
 # 查看当前Activity
 def sh(command, print_msg=True):
@@ -140,8 +145,8 @@ def safe_index_of(str0, substr):
     except ValueError:
         return -1
 
-def get_launcher_activity(package_name):
-    result = sh("adb shell dumpsys package %s" %
+def get_launcher_activity(self, package_name):
+    result = sh(self.adb_path + " shell dumpsys package %s" %
                 (package_name), print_msg=False)
     if not result:
         return
