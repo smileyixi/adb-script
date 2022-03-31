@@ -51,6 +51,8 @@
 **keyevent  -  查看所有系统按键**
 **key [num] -  点击按键**
     [num] 按键代码，输入keyevent命令查看代码
+**wait [num]-  等待num秒，单位秒**
+**swipe     - 向上滑动一段距离【可用于解锁手机】**
 **state     -  查看adb连接手机状态**
 
 **install [-r] [file.apk] -  安装软件**
