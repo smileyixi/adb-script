@@ -37,38 +37,36 @@
 
 
 # 使用帮助
+getevent  - 打开终端监听事件数据
+sendevent - 测试并执行获取的事件
+saveevent - 保存事件代码到脚本文件
 
-**exit -  退出**
-
-**getevent  - 打开终端监听事件数据**
-
-**sendevent - 测试并执行获取的事件**
-
-**saveevent - 保存事件代码到脚本文件**
-
-**click [num1] [num2] - 点击屏幕(x,y)点**
+click [num1] [num2] - 点击屏幕(x,y)点
     [num] 点击点(x,y)的坐标数值
-**keyevent  -  查看所有系统按键**
-**key [num] -  点击按键**
+keyevent  -  查看所有系统按键
+key [num] -  点击按键
     [num] 按键代码，输入keyevent命令查看代码
-**wait [num]-  等待num秒，单位秒**
-**swipe     - 向上滑动一段距离【可用于解锁手机】**
-**state     -  查看adb连接手机状态**
+wait [num]-  等待num秒，单位秒
+swipe     - 向上滑动一段距离【可用于解锁手机】
+state     -  查看adb连接手机状态
 
-**install [-r] [file.apk] -  安装软件**
+install [-r] [file.apk] -  安装软件
     -r  可选参数，覆盖原有的apk进行安装
     [file.apk] 要安装的App路径
-**uninstall [-k] [package] -  卸载软件**
+uninstall [-k] [package] -  卸载软件
     -k  可选参数，保留apk配置文件卸载
 
-**pkg  -  显示所有包名**
+pkg  -  显示所有包名
     -s 只显示系统应用
     -3 只显示第三方应用
-**savepkg [file] [mode] - 保存所有包名到文件默认为 data\packages.txt**
+    --this  显示当前App的包名
+savepkg [file] [mode]- 保存所有包名到文件默认为 data\packages.txt
     [file] 可选参数，自定义保存文件路径
     [mode] 可选参数，保存包名类型，参数同pkg命令
-**showact - 显示当前页面的Activity**
-    --launcher 可选参数，找到App启动页面的Activity 
+exact - 显示当前页面的Activity,并执行可选操作
+    --launcher 可选参数，找到当前App启动页面的Activity
+cleardata [package] - 清除当前应用数据
+    [package] 可选参数，指定清除的App包名
 
 
 
