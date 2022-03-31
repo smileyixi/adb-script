@@ -1,195 +1,316 @@
-# 可视化获取数据包
-from pickle import LIST
-from adb import Adb_func
-import pyautogui as auto
-import subprocess
-import re
 import os
-import time
+import subprocess
+import datetime
+import platform
+import re
+import adb
+from adb import Adb_func
+from auto import Auto_func
 
 
-class Auto_func():
-    def __init__(self) -> None:
-        self.adb_func = Adb_func()
+class FileInit():
+    def console_char(self):
+        print('''
+     ██     ███████   ██████          ████████   ██████  ███████   ██ ███████  ██████████
+    ████   ░██░░░░██ ░█░░░░██        ██░░░░░░   ██░░░░██░██░░░░██ ░██░██░░░░██░░░░░██░░░ 
+   ██░░██  ░██    ░██░█   ░██       ░██        ██    ░░ ░██   ░██ ░██░██   ░██    ░██    
+  ██  ░░██ ░██    ░██░██████   █████░█████████░██       ░███████  ░██░███████     ░██    
+ ██████████░██    ░██░█░░░░ ██░░░░░ ░░░░░░░░██░██       ░██░░░██  ░██░██░░░░      ░██    
+░██░░░░░░██░██    ██ ░█    ░██             ░██░░██    ██░██  ░░██ ░██░██          ░██    
+░██     ░██░███████  ░███████        ████████  ░░██████ ░██   ░░██░██░██          ░██    
+░░      ░░ ░░░░░░░   ░░░░░░░        ░░░░░░░░    ░░░░░░  ░░     ░░ ░░ ░░           ░░    
+        ''')
+        print("                                                                        \033[31m v1.0 by smilesl \033[0m")
 
-    # 获取设备最大宽度
-    def get_width_max(self):
-        event_list = subprocess.getoutput(self.adb_func.getEvent()).split('\n')
-        try:
-            width = re.findall("max \d{1,4}", event_list[0])[0]
-            width = int(width[4:])
-            return width
-        except:
-            print("[-] Device not connected!")
-            return 0
+    # 初始化信息
+    # [1]setInfo() - 设置信息 - [para:file_path 文件相对路径 / authorname 作者]
+    # [2]createFile() - 创建脚本
+    def __init__(self, file_path, author = "SMILESL", reWrite=True) -> None:
+        self.os = platform.system   # 检测系统类型
+        #self.__init()
+        self.setInfo(file_path, author)
+        self.createFile(reWrite=reWrite)
+        self.__is_init_event = False    # 是否初始化了event
+        self.auto_func = Auto_func()    # 实例化Auto_func
+        self.adb_func = Adb_func()      # 实例化Adb_func
+
+    # 启动自检函数 [文件目录是否存在以及完整性等]
+    # def __init(self):
+    #     pass
+
+    def pErr(self, cls=0x00):
+        if cls == 0x01:
+            print("\n参数错误！- Type 'help' to view the help\n")
+        elif cls == 0x02:
+            print("[-]Unknown Command!")
+        elif cls == 0x03:
+            print("[-] Adb has no connected device!")
+        elif cls == 0x04:
+            print("[-] The ADB environment is not configured!")
+        else:
+            print("[OS]未知的错误类型")
+
+    # 判断参数个数
+    def paraTest(self, cmd,  num:int) -> bool:
+        if len(cmd) != num:
+            self.pErr(0x01)
+            return False
+        return True
+
+    def connInit(self):
+        # 检测是否连接设备
+        self.conn_state = False
+        self.conn_devices = []
+        # 初始化adb devices
+        subprocess.getoutput("adb devices")
+        # 检测是否安装adb，或配置adb环境
+        if "List of devices attached" not in subprocess.getoutput("adb devices"):
+            self.pErr(0x04)
         
-        
-
-    # 获取设备最大高度
-    def get_height_max(self):
-        event_list = subprocess.getoutput(self.adb_func.getEvent()).split('\n')
-        try:
-            height = re.findall("max \d{1,4}", event_list[1])[0]
-            height = int(height[4:])
-            return height
-        except:
-            print("[-] Device not connected!")
-            return 0
-
-
-    # autogui保存事件log
-    def event_log(self):
-        auto.PAUSE = 0.5
-        auto.FAILSAFE = False
-
-        os.system("open -n /System/Applications/Utilities/Terminal.app") # 打开Ternimal（只适用于MacOS，其他系统自行更改）
-        time.sleep(2)
-        os.system("clear")
-        time.sleep(2)
-        
-        auto.typewrite(self.adb_func.getEventEev(), '0.01') # 调用adb function记录事件 - 手动保存event事件
-        auto.press('Enter')
-        print("[+] 事件监测已开启,手动保存终端event code到脚本根目录下data/event_temp.txt文件")
-
-    # 解析装载payload
-    def init_event(self, timestamp_step_time = 0.2, path = "data/event_temp.txt"):
-        self.event_resolver(timestamp_step_time, path)
-        self.event_loader()
-        return self.event_payload_list
-
-
-    # event code解析器(解析路径:data/event_temp.txt) - 注意txt中咩有数据的情况
-    # 根据time间隔判断是否为同一组数据
-    def event_resolver(self, timestamp_step: float, path: str) -> list:
-        self.event_num = 0                  # 事件总数
-        event_list = []                 # 事件列表
-        self.event_group_list = [[]]         # 事件分组
-        timestamp_list = []             # 时间戳列表
-        self.timestamp_group_list = [[]]     # 时间戳分组
-        timestamp_step = timestamp_step # 时间容差（以此判断分组,建议0.2并小于0.5）
-
-        # 判断文件是否存在
-        if not os.path.exists(path):
-            print("[-] No such file or directory! - event_temp.txt")
-            return 0
-        # 读取数据->过滤数据
-        for line in open("data/event_temp.txt", "r+"):
-            if "/dev/input" in line:
-                event_list.append(line.replace("\n", ""))
-
-        # 至少有两条数据,否则返回0
-        if len(event_list) < 2:
-            print("[-] Auto_func.event_resolver |  Data acquisition failure!")
-            return 0
-
-        # 解析数据（获取时间戳）
-        for event in event_list:
-            param_top = re.findall("\[(.*?)\]", event)
-            timestamp_list.append(param_top[0].replace(" ", ""))
-
-        # 解析数据（hex->dec）
-        for event in event_list:
-            # 单条数据格式/dev/input/event5: 0003 0035 000001cb -> /dev/input/event5 0003 0035 459
-            param_list = event.split(" ")
-            event_list[event_list.index(event)] = event[:-8] + str(int(param_list[-1], 16))
-
-
-        # (获取event时间戳分组)（分析event分组的间隔时间）
-        # [['614.144441', '614.144441'], ['616.025771', '616.030530', '616.034555'], ['616.268549']]
-        group_id = 0
-        self.timestamp_group_list[0].append(timestamp_list[0])
-        for timestamp_index in range(0, len(timestamp_list)):
-            if timestamp_index == len(timestamp_list)-1:
-                break
-            gap = float(timestamp_list[timestamp_index+1]) - float(timestamp_list[timestamp_index])
-            if gap >= 0 and gap <= timestamp_step:     # 满足要求，放入当前组数据
-                self.timestamp_group_list[group_id].append(timestamp_list[timestamp_index+1])
-            elif gap > timestamp_step:                 # 不是一组数据，把当前数据加入开新的一组
-                group_id += 1
-                self.timestamp_group_list.append([])
-                self.timestamp_group_list[group_id].append(timestamp_list[timestamp_index+1])
-
-        # 计算分组深度
-        latNumTwo_timestamp_group_list = []  # 第二维数组深度 [2, 3, 1]
-        for list in self.timestamp_group_list:
-            latNumTwo_timestamp_group_list.append(len(list))
-
-        # 根据时间戳分组获取event分组
-        self.event_group_list = [[]for i in range(len(latNumTwo_timestamp_group_list))]   # 预先分好空组
-        event_list_index = 0
-        for event_group in self.event_group_list:
-            event_group += event_list[event_list_index:event_list_index+int(latNumTwo_timestamp_group_list[self.event_group_list.index(event_group)])]
-            event_list_index += int(latNumTwo_timestamp_group_list[self.event_group_list.index(event_group)])
-
-        # 事件总数
-        self.event_num = len(self.event_group_list)
-
-    # event装载器
-    # 根据事件组（二维），时间戳组（二维），以[Adb_func]类为基础装载事件代码
-    # event：[     614.144441] /dev/input/event5: 0003 0035 192
-    def event_loader(self):
-        CLIENT_X = 35
-        CLIENT_Y = 36
-        self.timeslice_list = []     # 事件时间片列表
-        self.event_payload_list = []    # 事件装载列表
-        
-        # 时间戳组处理 -（判断点击和滑动）（获取事件间隔时间）
-        for timestamp_group_index in range(len(self.timestamp_group_list)):
-            if timestamp_group_index == len(self.timestamp_group_list)-1:
-                break
-            timeslice = float(self.timestamp_group_list[timestamp_group_index+1][0]) - float(self.timestamp_group_list[timestamp_group_index][-1])
-            self.timeslice_list.append(round(timeslice, 2))  # 保留两位小数
-        
-        # 事件组处理 - 提取单次event的(x,y)
-        for event_group in self.event_group_list:
-            event_group_len = len(event_group)
-
-            if event_group_len == 2:    # click - 装载单击事件
-                if int(event_group[0][19:].split(" ")[-2]) == CLIENT_X and int(event_group[1][19:].split(" ")[-2]) == CLIENT_Y:
-                    param_x = int(event_group[0][19:].split(" ")[-1])
-                    param_y = int(event_group[1][19:].split(" ")[-1])
-
-                    self.event_payload_list.append(self.adb_func.click(param_x, param_y))
+        dev_list = subprocess.getoutput(self.adb_func.devices()).split("\n")
+        dev_list.pop()
+        if len(dev_list)==1:
+            self.pErr(0x03)
+            self.conn_state = False
+        else:
+            dev_list.pop(0)
+            for i in dev_list:
+                device = i.replace("\t", " ")
+                if "device" in i:
+                    self.conn_state = True
+                    self.conn_devices.append(device)
+                    print("[+] Adb successfully connected to " + device)
+                elif "offline" in i:
+                    self.conn_state = False
+                    print("[!] 设备连接异常! at " + device)
+                elif "unauthorized" in i:
+                    self.conn_state = False
+                    print("[!] usb调试未授权! at " + device)
                 else:
-                    print("[!] Auto_func.event_loader | Unknown operands!") 
-                    break
+                    self.pErr(0x03)
 
-            elif event_group_len > 2:   # slide - 装载滑动事件
-                x_list = []
-                y_list = []
-                
-                # 获取单个分组中的x,y集合
-                for event in event_group:
-                    if int(event[19:].split(" ")[-2]) == CLIENT_X:
-                        x_list.append(int(event[19:].split(" ")[-1]))
-                    elif int(event[19:].split(" ")[-2]) == CLIENT_Y:
-                        y_list.append(int(event[19:].split(" ")[-1]))
+    def addCmdLine(self, string:str):
+        self.f.write("os.system('"+string.replace('\n', '')+"')\n")
+
+    def userCmd(self):
+        # 初始化输出屏幕
+        if self.os == "Windows":
+            os.system("cls")
+        else:
+            os.system("clear")
+        self.connInit()
+        print(self.file_state)
+        print("\n出现问题可尝试使用'adb kill-server'命令重启adb服务，或者'adb connect [device]' 命令连接设备")
+        print("使用脚本前请检查adb工具是否已安装或是否可用\n")
+
+        # console char
+        self.console_char()
+        
+        step = 1
+
+        while True:
+            cmd = input("\033[1;34;40m[OS]\033[0m 输入help查看帮助信息:")
+
+            if ' ' in cmd:
+                cmd = cmd.split(' ')
+            if cmd == "":
+                continue
+            if not self.conn_state and cmd != "exit" and step:
+                self.pErr(0x03)
+                step = 0
+            # package handle
+            elif cmd == "pkg" or cmd[0] == "pkg":
+                if isinstance(cmd,list):
+                    if cmd[1] == "--this":
+                        print(subprocess.getoutput(self.adb_func.showAllPkg("--this")).split(" ")[-1].split("/")[0])
                     else:
-                        print("[!] Bad data | " + event)
-                        print("[!] Data source error!") 
-                        break
-                # 起始 - 终点 坐标
-                param_x1 = x_list[0]
-                param_y1 = y_list[0]
-                param_x2 = x_list[-1]
-                param_y2 = y_list[-1]
+                        os.system(self.adb_func.showAllPkg(cmd[1]))
+                else:
+                    os.system(self.adb_func.showAllPkg())
+            elif cmd[0] == "savepkg" or cmd == "savepkg":
+                if len(cmd) == 3:
+                    pkgs = subprocess.getoutput(self.adb_func.showAllPkg(cmd[2]))
+                else:
+                    pkgs = subprocess.getoutput(self.adb_func.showAllPkg())
+                if isinstance(cmd,list):
+                    f = open(cmd[1], "w+")
+                    print("[+] Successfully saved to "+cmd[1])
+                else:
+                    f = open("data/packages.txt", "w+")
+                    print("[+] Successfully saved to "+"data/packages.txt")
+                f.write(pkgs)
+                f.close()
 
-                self.event_payload_list.append(self.adb_func.swipe(param_x1, param_y1, param_x2, param_y2))
-
-            else:                       # 数据解析错误，残缺的参数
-                print("[-] Auto_func.event_loader | Data parsing error, incomplete parameters!") 
+            elif cmd == "help":
+                self.adb_func.info()
+            elif cmd == "exit":
+                print("[+] All changes have been saved to " + self.file_path)
                 break
- 
-    # event发送器
-    def send_event(self):
-        for index in range(len(self.event_payload_list)):
-            if index != len(self.event_payload_list)-1:
-                print("[*] Executing load [{}]".format(self.event_payload_list[index]))
-                os.system(self.event_payload_list[index])
-                time.sleep(float(self.timeslice_list[index]))    # 等待
-                
-            else:
-                print("[*] Executing load [{}]".format(self.event_payload_list[index]))
-                os.system(self.event_payload_list[index])
+            elif cmd == "clear":
+                os.system("clear")
+            elif cmd == "state":
+                self.connInit()
+            
+            # key click handle
+            elif cmd == "keyevent":
+                self.adb_func.showkeys()
+            elif cmd[0] == "key":
+                if not self.paraTest(cmd, 2):
+                    continue
+                if not self.adb_func.keyevent(cmd[1]):
+                    self.pErr(0x01)
+                self.addCmdLine(self.adb_func.keyevent(cmd[1]))
+                print("[+] Add key " + cmd[1])
+            elif cmd[0] == "click":
+                if not self.paraTest(cmd, 3):
+                    continue
+                self.addCmdLine(self.adb_func.click(cmd[1], cmd[2]))
+                print("[+] click ({x}, {y})".format(x=cmd[1], y=cmd[2]))
+            elif cmd == "swipe":
+                width_max  = float(self.auto_func.get_width_max())
+                height_max = float(self.auto_func.get_height_max())
 
-print(Auto_func().get_height_max())
+                if width_max == 0 or height_max == 0:
+                    self.pErr(0x01)
+                    return 0
+
+                param_x1 = int(width_max * 0.5)
+                param_y1 = int(height_max * 0.8)
+                param_x2 = int(width_max * 0.5)
+                param_y2 = int(height_max * 0.2)
+                self.addCmdLine(self.adb_func.swipe(param_x1, param_y1, param_x2, param_y2))
+                print("[+] swipe ({},{}) to ({},{})".format(param_x1, param_y1, param_x2, param_y2))
+            elif cmd[0] == "wait":
+                if not self.paraTest(cmd, 2):
+                    continue
+                self.addCmdLine("time.sleep("+cmd[1]+")")
+                print("[+] wait 5")
+
+            # apk activity handle
+            elif cmd[0] == "install":
+                if len(cmd) == 3:
+                    if not self.adb_func.install(cmd[2], cmd[1]):
+                        self.pErr(0x01)
+                    else:
+                        self.addCmdLine(self.adb_func.install(cmd[2], cmd[1]))
+                        print("[+] Add install " + cmd[2])
+                else:
+                    if not self.adb_func.install(cmd[1]):
+                        self.pErr(0x01)
+                        break
+                    else:
+                        self.addCmdLine(self.adb_func.install(cmd[1]))
+                        print("[+] Add install " + cmd[1])
+            elif cmd[0] == "uninstall":
+                if len(cmd) == 3:
+                    if not self.adb_func.uninstall(cmd[2], cmd[1]):
+                        self.pErr(0x01)
+                    else:
+                        self.addCmdLine(self.adb_func.uninstall(cmd[2], cmd[1]))
+                        print("[+] Add uninstall " + cmd[2])
+                else:
+                    if not self.adb_func.uninstall(cmd[1]):
+                        self.pErr(0x01)
+                    else:
+                        self.addCmdLine(self.adb_func.uninstall(cmd[1]))
+                        print("[+] Add uninstall " + cmd[1])
+            elif cmd == "exact" or cmd[0] == "exact":
+                result = subprocess.getoutput(self.adb_func.showActivity())
+                currentAct = "com." + re.findall("com.(.*?)}",result)[0]
+                # 获取launcher Activity
+                if isinstance(cmd, list):
+                    if not self.paraTest(cmd, 2):
+                        continue
+                    if cmd[1] == "--launcher":
+                        currentAct = currentAct.split(" ")[-1].split("/")[0].replace(" ", "")
+                        currentAct = adb.get_launcher_activity(currentAct).split("\n")[0].replace(" ", "").replace("\n", "")
+                    else:
+                        self.pErr(0x01)
+                        continue
+                # 获取当前 Activity
+                else:
+                    currentAct = currentAct.split(" ")[-1].replace(" ", "").replace("\n", "")
+                print(currentAct)
+                flag = input("是否添加<执行当前活动到'{}'>(输入任意字符取消):".format(self.file_path))
+                if flag == "":
+                    self.addCmdLine(self.adb_func.actionAct(currentAct).strip("\n"))
+                    print("[+] Add execute activity {} task".format(currentAct))
+                else:
+                    print("[-] Cancel the add operation") 
+            elif cmd[0] == "cleardata" or cmd == "cleardata":
+                if isinstance(cmd, list):
+                    os.system(self.adb_func.clearData(cmd[1]))
+                else:
+                    os.system(self.adb_func.clearData())
+            
+            # 录制手势 - 无需root！
+            elif cmd == "getevent":  # 获取event数据
+                if self.os == "Windows" or self.os == "Linux":
+                    print("[-] 不支持此操作，请查看[README.md]获取帮助")
+                else:
+                    self.auto_func.event_log()
+            elif cmd == "sendevent": # 测试使用payload
+                if not self.__is_init_event:
+                    print("[*] 正在初始化event事件")
+                    self.event_payload_list = self.auto_func.init_event(0.2)
+                    self.__is_init_event == True
+                self.auto_func.send_event()
+
+
+            elif cmd == "saveevent": # 保存动作数据到脚本
+                if not self.__is_init_event:
+                    print("[*] 正在初始化event事件")
+                    self.event_payload_list = self.auto_func.init_event(0.2)
+
+                for payload in self.event_payload_list:
+                    self.addCmdLine(payload)
+                self.__is_init_event = True
+                print("[+] add event | num {}".format(self.auto_func.event_num))
+
+            # adb shell
+            elif cmd[0] == "adb":
+                adb_cmd = ""
+                for i in cmd:
+                    adb_cmd = adb_cmd + i + " "
+                os.system(adb_cmd)
+            else:
+                self.pErr(0x02)
+            
+    
+    # 创建文件 - [para：reWrite 重写文件]
+    # Api - self.f 文件对象
+    def createFile(self, reWrite):
+        if not os.path.exists(self.file_path) or reWrite:
+            f = open(self.file_path, "w+")
+            f.write("# [INFORMATION]\n")
+            f.write("# 脚本名称[{}]\n".format(self.info_dict['file_name']))
+            f.write("# 作者[{}]\n".format(self.info_dict['author_name']))
+            f.write("# 创建日期[{}]\n\n".format(self.info_dict['creattime']))
+            f.write("import os\n")
+            f.write("import subprocess\n")
+            f.write("import time\n")
+            self.file_state = "[+] Script file creation is normal."
+            self.f = f
+        else: # 文件已存在：不重写，返回追加file对象
+            self.file_state = "[!] File already exists!You can continue to add content."
+            self.f = open(self.file_path, "a")    
+
+    # 设置信息，内部func
+    def setInfo(self, file_path, author):
+        if "/" in file_path or "\\" in file_path: self.file_path = file_path
+        else: self.file_path = "script/" + file_path
+        self.file_name = os.path.basename(file_path)
+        self.author_name = author
+        self.createtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        self.info_dict = {
+            "file_name": self.file_name,
+            "author_name": self.author_name,
+            "creattime": self.createtime
+        }
+ 
+    # 获取信息，测试func
+    def getInfo(self):
+        print("脚本名称[{}]".format(self.file_name))
+        print("作者[{}]".format(self.author_name))
+        print("创建日期[{}]".format(self.createtime))
