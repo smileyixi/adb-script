@@ -56,7 +56,7 @@ class Auto_func():
     def init_event(self, timestamp_step_time = 0.2, path = "data/event_temp.txt"):
         self.event_resolver(timestamp_step_time, path)
         self.event_loader()
-        return self.event_payload_list
+        return self.event_payload_list, self.timeslice_list
 
 
     # event code解析器(解析路径:data/event_temp.txt) - 注意txt中咩有数据的情况
