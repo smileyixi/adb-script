@@ -9,6 +9,18 @@ from auto import Auto_func
 
 
 class FileInit():
+    def console_char(self):
+        print('''
+     ██     ███████   ██████          ████████   ██████  ███████   ██ ███████  ██████████
+    ████   ░██░░░░██ ░█░░░░██        ██░░░░░░   ██░░░░██░██░░░░██ ░██░██░░░░██░░░░░██░░░ 
+   ██░░██  ░██    ░██░█   ░██       ░██        ██    ░░ ░██   ░██ ░██░██   ░██    ░██    
+  ██  ░░██ ░██    ░██░██████   █████░█████████░██       ░███████  ░██░███████     ░██    
+ ██████████░██    ░██░█░░░░ ██░░░░░ ░░░░░░░░██░██       ░██░░░██  ░██░██░░░░      ░██    
+░██░░░░░░██░██    ██ ░█    ░██             ░██░░██    ██░██  ░░██ ░██░██          ░██    
+░██     ░██░███████  ░███████        ████████  ░░██████ ░██   ░░██░██░██          ░██    
+░░      ░░ ░░░░░░░   ░░░░░░░        ░░░░░░░░    ░░░░░░  ░░     ░░ ░░ ░░           ░░    
+        ''')
+        print("                                                                        \033[31m v1.0 by smilesl \033[0m")
 
     # 初始化信息
     # [1]setInfo() - 设置信息 - [para:file_path 文件相对路径 / authorname 作者]
@@ -20,6 +32,7 @@ class FileInit():
         self.createFile(reWrite=reWrite)
         self.__is_init_event = False    # 是否初始化了event
         self.auto_func = Auto_func()    # 实例化Auto_func
+        self.adb_func = Adb_func()      # 实例化Adb_func
 
     # 启动自检函数 [文件目录是否存在以及完整性等]
     # def __init(self):
@@ -37,6 +50,7 @@ class FileInit():
         else:
             print("[OS]未知的错误类型")
 
+    # 判断参数个数
     def paraTest(self, cmd,  num:int) -> bool:
         if len(cmd) != num:
             self.pErr(0x01)
@@ -53,7 +67,7 @@ class FileInit():
         if "List of devices attached" not in subprocess.getoutput("adb devices"):
             self.pErr(0x04)
         
-        dev_list = subprocess.getoutput(Adb_func.devices()).split("\n")
+        dev_list = subprocess.getoutput(self.adb_func.devices()).split("\n")
         dev_list.pop()
         if len(dev_list)==1:
             self.pErr(0x03)
@@ -90,18 +104,8 @@ class FileInit():
         print("使用脚本前请检查adb工具是否已安装或是否可用\n")
 
         # console char
-        print('''
-     ██     ███████   ██████          ████████   ██████  ███████   ██ ███████  ██████████
-    ████   ░██░░░░██ ░█░░░░██        ██░░░░░░   ██░░░░██░██░░░░██ ░██░██░░░░██░░░░░██░░░ 
-   ██░░██  ░██    ░██░█   ░██       ░██        ██    ░░ ░██   ░██ ░██░██   ░██    ░██    
-  ██  ░░██ ░██    ░██░██████   █████░█████████░██       ░███████  ░██░███████     ░██    
- ██████████░██    ░██░█░░░░ ██░░░░░ ░░░░░░░░██░██       ░██░░░██  ░██░██░░░░      ░██    
-░██░░░░░░██░██    ██ ░█    ░██             ░██░░██    ██░██  ░░██ ░██░██          ░██    
-░██     ░██░███████  ░███████        ████████  ░░██████ ░██   ░░██░██░██          ░██    
-░░      ░░ ░░░░░░░   ░░░░░░░        ░░░░░░░░    ░░░░░░  ░░     ░░ ░░ ░░           ░░    
-        ''')
-        print("                                                                        \033[31m v1.0 by smilesl \033[0m")
-
+        self.console_char()
+        
         step = 1
 
         while True:
@@ -118,16 +122,16 @@ class FileInit():
             elif cmd == "pkg" or cmd[0] == "pkg":
                 if isinstance(cmd,list):
                     if cmd[1] == "--this":
-                        print(subprocess.getoutput(Adb_func.showAllPkg("--this")).split(" ")[-1].split("/")[0])
+                        print(subprocess.getoutput(self.adb_func.showAllPkg("--this")).split(" ")[-1].split("/")[0])
                     else:
-                        os.system(Adb_func.showAllPkg(cmd[1]))
+                        os.system(self.adb_func.showAllPkg(cmd[1]))
                 else:
-                    os.system(Adb_func.showAllPkg())
+                    os.system(self.adb_func.showAllPkg())
             elif cmd[0] == "savepkg" or cmd == "savepkg":
                 if len(cmd) == 3:
-                    pkgs = subprocess.getoutput(Adb_func.showAllPkg(cmd[2]))
+                    pkgs = subprocess.getoutput(self.adb_func.showAllPkg(cmd[2]))
                 else:
-                    pkgs = subprocess.getoutput(Adb_func.showAllPkg())
+                    pkgs = subprocess.getoutput(self.adb_func.showAllPkg())
                 if isinstance(cmd,list):
                     f = open(cmd[1], "w+")
                     print("[+] Successfully saved to "+cmd[1])
@@ -138,7 +142,7 @@ class FileInit():
                 f.close()
 
             elif cmd == "help":
-                Adb_func.info()
+                self.adb_func.info()
             elif cmd == "exit":
                 print("[+] All changes have been saved to " + self.file_path)
                 break
@@ -149,53 +153,69 @@ class FileInit():
             
             # key click handle
             elif cmd == "keyevent":
-                Adb_func.showkeys()
+                self.adb_func.showkeys()
             elif cmd[0] == "key":
                 if not self.paraTest(cmd, 2):
                     continue
-                if not Adb_func.keyevent(cmd[1]):
+                if not self.adb_func.keyevent(cmd[1]):
                     self.pErr(0x01)
-                self.addCmdLine(Adb_func.keyevent(cmd[1]))
+                self.addCmdLine(self.adb_func.keyevent(cmd[1]))
                 print("[+] Add key " + cmd[1])
             elif cmd[0] == "click":
                 if not self.paraTest(cmd, 3):
                     continue
-                self.addCmdLine(Adb_func.click(cmd[1], cmd[2]))
+                self.addCmdLine(self.adb_func.click(cmd[1], cmd[2]))
                 print("[+] click ({x}, {y})".format(x=cmd[1], y=cmd[2]))
+            elif cmd == "swipe":
+                width_max  = float(self.auto_func.get_width_max())
+                height_max = float(self.auto_func.get_height_max())
+
+                if width_max == 0 or height_max == 0:
+                    self.pErr(0x01)
+                    return 0
+
+                param_x1 = int(width_max * 0.5)
+                param_y1 = int(height_max * 0.8)
+                param_x2 = int(width_max * 0.5)
+                param_y2 = int(height_max * 0.2)
+                self.addCmdLine(self.adb_func.swipe(param_x1, param_y1, param_x2, param_y2))
+                print("[+] swipe ({},{}) to ({},{})".format(param_x1, param_y1, param_x2, param_y2))
             elif cmd[0] == "wait":
-                if not self.paraTest(2):
-                    self.addCmdLine("time.sleep("+cmd[1]+")")
+                if not self.paraTest(cmd, 2):
+                    continue
+                self.addCmdLine("time.sleep("+cmd[1]+")")
+                print("[+] wait 5")
 
             # apk activity handle
             elif cmd[0] == "install":
                 if len(cmd) == 3:
-                    if not Adb_func.install(cmd[2], cmd[1]):
+                    if not self.adb_func.install(cmd[2], cmd[1]):
                         self.pErr(0x01)
                     else:
-                        self.addCmdLine(Adb_func.install(cmd[2], cmd[1]))
+                        self.addCmdLine(self.adb_func.install(cmd[2], cmd[1]))
                         print("[+] Add install " + cmd[2])
                 else:
-                    if not Adb_func.install(cmd[1]):
+                    if not self.adb_func.install(cmd[1]):
                         self.pErr(0x01)
                         break
                     else:
-                        self.addCmdLine(Adb_func.install(cmd[1]))
+                        self.addCmdLine(self.adb_func.install(cmd[1]))
                         print("[+] Add install " + cmd[1])
             elif cmd[0] == "uninstall":
                 if len(cmd) == 3:
-                    if not Adb_func.uninstall(cmd[2], cmd[1]):
+                    if not self.adb_func.uninstall(cmd[2], cmd[1]):
                         self.pErr(0x01)
                     else:
-                        self.addCmdLine(Adb_func.uninstall(cmd[2], cmd[1]))
+                        self.addCmdLine(self.adb_func.uninstall(cmd[2], cmd[1]))
                         print("[+] Add uninstall " + cmd[2])
                 else:
-                    if not Adb_func.uninstall(cmd[1]):
+                    if not self.adb_func.uninstall(cmd[1]):
                         self.pErr(0x01)
                     else:
-                        self.addCmdLine(Adb_func.uninstall(cmd[1]))
+                        self.addCmdLine(self.adb_func.uninstall(cmd[1]))
                         print("[+] Add uninstall " + cmd[1])
             elif cmd == "exact" or cmd[0] == "exact":
-                result = subprocess.getoutput(Adb_func.showActivity())
+                result = subprocess.getoutput(self.adb_func.showActivity())
                 currentAct = "com." + re.findall("com.(.*?)}",result)[0]
                 # 获取launcher Activity
                 if isinstance(cmd, list):
@@ -213,15 +233,15 @@ class FileInit():
                 print(currentAct)
                 flag = input("是否添加<执行当前活动到'{}'>(输入任意字符取消):".format(self.file_path))
                 if flag == "":
-                    self.addCmdLine(Adb_func.actionAct(currentAct).strip("\n"))
+                    self.addCmdLine(self.adb_func.actionAct(currentAct).strip("\n"))
                     print("[+] Add execute activity {} task".format(currentAct))
                 else:
                     print("[-] Cancel the add operation") 
             elif cmd[0] == "cleardata" or cmd == "cleardata":
                 if isinstance(cmd, list):
-                    os.system(Adb_func.clearData(cmd[1]))
+                    os.system(self.adb_func.clearData(cmd[1]))
                 else:
-                    os.system(Adb_func.clearData())
+                    os.system(self.adb_func.clearData())
             
             # 录制手势 - 无需root！
             elif cmd == "getevent":  # 获取event数据
@@ -233,6 +253,7 @@ class FileInit():
                 if not self.__is_init_event:
                     print("[*] 正在初始化event事件")
                     self.event_payload_list = self.auto_func.init_event(0.2)
+                    self.__is_init_event == True
                 self.auto_func.send_event()
 
 
@@ -244,6 +265,7 @@ class FileInit():
                 for payload in self.event_payload_list:
                     self.addCmdLine(payload)
                 self.__is_init_event = True
+                print("[+] add event | num {}".format(self.auto_func.event_num))
 
             # adb shell
             elif cmd[0] == "adb":
