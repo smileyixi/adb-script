@@ -91,7 +91,8 @@ class Adb_func():
         for i in keyevent:
             if str(i) == key:
                 return self.adb_path + " shell input keyevent "+key
-        return 0
+            else:
+                return 0
     def click(self, x:int, y:int):
         return self.adb_path + " shell input tap {} {}".format(x, y)
     def swipe(self, x1:int, y1:int, x2:int, y2:int):
