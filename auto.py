@@ -9,21 +9,32 @@ import time
 
 
 class Auto_func():
+    def __init__(self) -> None:
+        self.adb_func = Adb_func()
 
     # 获取设备最大宽度
-    def get_width_max() -> int:
-        event_list = subprocess.getoutput(Adb_func.getEvent()).split('\n')
-        width = re.findall("max \d{1,4}", event_list[1])[0]
-        width = int(width[4:])
-        return width
+    def get_width_max(self):
+        event_list = subprocess.getoutput(self.adb_func.getEvent()).split('\n')
+        try:
+            width = re.findall("max \d{1,4}", event_list[0])[0]
+            width = int(width[4:])
+            return width
+        except:
+            print("[-] Device not connected!")
+            return 0
+        
         
 
     # 获取设备最大高度
-    def get_height_max() -> int:
-        event_list = subprocess.getoutput(Adb_func.getEvent()).split('\n')
-        height = re.findall("max \d{1,4}", event_list[2])[0]
-        height = int(height[4:])
-        return height
+    def get_height_max(self):
+        event_list = subprocess.getoutput(self.adb_func.getEvent()).split('\n')
+        try:
+            height = re.findall("max \d{1,4}", event_list[1])[0]
+            height = int(height[4:])
+            return height
+        except:
+            print("[-] Device not connected!")
+            return 0
 
 
     # autogui保存事件log
@@ -36,7 +47,7 @@ class Auto_func():
         os.system("clear")
         time.sleep(2)
         
-        auto.typewrite(Adb_func.getEventEev(), '0.01') # 调用adb function记录事件 - 手动保存event事件
+        auto.typewrite(self.adb_func.getEventEev(), '0.01') # 调用adb function记录事件 - 手动保存event事件
         auto.press('Enter')
         print("[+] 事件监测已开启,手动保存终端event code到脚本根目录下data/event_temp.txt文件")
 
@@ -138,7 +149,7 @@ class Auto_func():
                     param_x = int(event_group[0][19:].split(" ")[-1])
                     param_y = int(event_group[1][19:].split(" ")[-1])
 
-                    self.event_payload_list.append(Adb_func.click(param_x, param_y))
+                    self.event_payload_list.append(self.adb_func.click(param_x, param_y))
                 else:
                     print("[!] Auto_func.event_loader | Unknown operands!") 
                     break
@@ -163,7 +174,7 @@ class Auto_func():
                 param_x2 = x_list[-1]
                 param_y2 = y_list[-1]
 
-                self.event_payload_list.append(Adb_func.swipe(param_x1, param_y1, param_x2, param_y2))
+                self.event_payload_list.append(self.adb_func.swipe(param_x1, param_y1, param_x2, param_y2))
 
             else:                       # 数据解析错误，残缺的参数
                 print("[-] Auto_func.event_loader | Data parsing error, incomplete parameters!") 
@@ -181,12 +192,4 @@ class Auto_func():
                 print("[*] Executing load [{}]".format(self.event_payload_list[index]))
                 os.system(self.event_payload_list[index])
 
-# 测试代码
-# if __name__ == "__main__":
-#     auto_func = Auto_func()
-#     auto_func.init_event(0.2)
-#     print("event num:"+str(auto_func.event_num))
-
-#     input("[Enter] execute..")
-#     auto_func.send_event()
-
+print(Auto_func().get_height_max())
