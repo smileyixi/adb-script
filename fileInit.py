@@ -159,6 +159,7 @@ class FileInit():
                     continue
                 if not self.adb_func.keyevent(cmd[1]):
                     self.pErr(0x01)
+                    continue
                 self.addCmdLine(self.adb_func.keyevent(cmd[1]))
                 print("[+] Add key " + cmd[1])
             elif cmd[0] == "click":
