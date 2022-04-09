@@ -90,7 +90,7 @@ class FileInit():
                     self.pErr(0x03)
 
     def addCmdLine(self, string:str):
-        self.f.write("os.system('"+string.replace('\n', '')+"')\n")
+        self.f.write("os.system('"+str(string).replace('\n', '')+"')\n")
 
     def userCmd(self):
         # 初始化输出屏幕
