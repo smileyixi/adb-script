@@ -88,11 +88,11 @@ class Adb_func():
     # 按键控制
     def keyevent(self, key:str):
         keyevent = [26, 82, 3, 4, 24, 25, 164, 85, 86, 87, 88, 126, 127]
+        key_temp = 0
         for i in keyevent:
-            if str(i) == key:
-                return self.adb_path + " shell input keyevent "+key
-            else:
-                return 0
+            if str(i) == str(key):
+                key_temp = str(key)
+        return self.adb_path + " shell input keyevent "+str(key_temp)
     def click(self, x:int, y:int):
         return self.adb_path + " shell input tap {} {}".format(x, y)
     def swipe(self, x1:int, y1:int, x2:int, y2:int):
@@ -146,8 +146,8 @@ def safe_index_of(str0, substr):
     except ValueError:
         return -1
 
-def get_launcher_activity(self, package_name):
-    result = sh(self.adb_path + " shell dumpsys package %s" %
+def get_launcher_activity(package_name):
+    result = sh("adb shell dumpsys package %s" %
                 (package_name), print_msg=False)
     if not result:
         return
