@@ -144,6 +144,7 @@ class FileInit():
             elif cmd == "help":
                 self.adb_func.info()
             elif cmd == "exit":
+                self.f.close()
                 print("[+] All changes have been saved to " + self.file_path)
                 break
             elif cmd == "clear":
@@ -254,7 +255,7 @@ class FileInit():
                 if not self.__is_init_event:
                     print("[*] 正在初始化event事件")
                     self.event_payload_list, self.event_timestamp_list = self.auto_func.init_event(0.2)
-                    self.__is_init_event == True
+                    self.__is_init_event = True
                 self.auto_func.send_event()
 
 
