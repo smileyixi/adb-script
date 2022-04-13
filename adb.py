@@ -92,6 +92,8 @@ class Adb_func():
         for i in keyevent:
             if str(i) == str(key):
                 key_temp = str(key)
+        if key_temp == 0:
+            return 0
         return self.adb_path + " shell input keyevent "+str(key_temp)
     def click(self, x:int, y:int):
         return self.adb_path + " shell input tap {} {}".format(x, y)
